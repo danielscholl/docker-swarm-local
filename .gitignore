@@ -1,3 +1,6 @@
 .vagrant
 playbooks/*.retry
 Volumes/
+shared/**/*
+!shared/README.md
+!shared/docker-compose-stack-monitoring.yml

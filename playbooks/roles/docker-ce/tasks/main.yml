@@ -53,5 +53,3 @@
     - { name: pip, version: 9.0.1 }
     - { name: docker-compose, version: 1.14.0 }
   when: item.version=="latest"
-
-- include: reboot.yml
