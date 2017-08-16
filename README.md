@@ -21,7 +21,7 @@ vagrant up
 
 ### VirtualBox SOAP Web Service
 
-There are two suggested steps to prepare the `VirtualBox` host OS to be able to
+There are two __REQUIRED__ steps to prepare the `VirtualBox` host OS to be able to
 receive communication from the guests that are running REX-Ray.  
 
 1. Remove authentication
