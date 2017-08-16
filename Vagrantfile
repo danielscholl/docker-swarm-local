@@ -1,87 +1,61 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-nummanagers = 2
-numworkers = 1
-
-
 Vagrant.configure("2") do |config|
-  # Set the current $PWD as the place where you will
-  # store the VMDKs that are attached to the VM.
-  dir = "#{ENV['PWD']}/Volumes"
 
-  memory = 512
-  cpu = 1
-
-  manager_nodes = []
-  manager_instances = []
-  (1..nummanagers).each do |n| 
-    manager_instances.push({:name => "manager#{n}", :ip => "10.0.7.#{n+10}"})
-    manager_nodes.push("manager#{n}")
-  end
-
-  worker_nodes = []
-  worker_instances = []
-  (1..numworkers).each do |n| 
-    worker_instances.push({:name => "worker#{n}", :ip => "10.0.7.#{n+20}"})
-    worker_nodes.push("worker#{n}")
-  end
-
+  # Set the Box OS
   config.vm.box = "ubuntu/xenial64"
+
+  # Customize the machine and add a SATA drive controller for REX-ray.
   config.vm.provider "virtualbox" do |vb|
-    vb.memory = memory
-    vb.cpus = cpu
+    vb.memory = 512
+    vb.cpus = 1
     vb.customize [ "modifyvm", :id, "--macaddress1", "auto" ]
+
+    #  Note: Doing a vagrant up after first time creation will fail as it tries to add controller again.
+    #  comment out this line to be able to do a vagrant halt and up again.
     vb.customize ["storagectl", :id, "--add", "sata", "--controller", "IntelAhci", "--name", "SATA", "--portcount", 30, "--hostiocache", "on"]
   end
 
+  # Ansible configure the nodes.
   config.vm.provision "ansible" do |ansible|
+
+    # Categorize nodes into the proper group to properly configure the swarm.
     ansible.groups = {
-      "manager" => manager_nodes,
-      "worker" => worker_nodes
+      "manager" => [
+        "node1",
+        "node2"
+      ],
+      "worker" => [
+        # "node3"  # <-- Uncomment to add a worker.
+      ]
     }
     ansible.playbook = "playbooks/main.yml"
     ansible.limit = 'all'
-    ansible.extra_vars = { 
-      "swarm_iface" => "enp0s8", 
+
+    # By default the interface to configure the swarm is the private network.
+    ansible.extra_vars = {
+      "swarm_iface" => "enp0s8",
     }
   end
 
-
-  manager_instances.each do |instance| 
-    config.vm.define instance[:name] do |i|
-      i.vm.hostname = instance[:name]
-      i.vm.network "private_network", ip: "#{instance[:ip]}"
-      # i.vm.provision "ansible" do |ansible|
-      #   ansible.groups = {
-      #     "manager" => manager_nodes,
-      #     "worker" => worker_nodes
-      #   }
-      #   ansible.playbook = "playbooks/main.yml"
-      #   ansible.limit = 'all'
-      #   ansible.extra_vars = { 
-      #     "swarm_iface" => "enp0s8", 
-      #   }
-      # end
-    end
+  # Create Node 1 for a Swarm Manager (Leader)
+  config.vm.define "node1" do |config|
+    config.vm.hostname = "node1"
+    config.vm.network "private_network", ip: "10.0.7.11"
+    config.vm.synced_folder "./shared/", "/home/ubuntu/shared"
   end
 
-  worker_instances.each do |instance| 
-    config.vm.define instance[:name] do |i|
-      i.vm.hostname = instance[:name]
-      i.vm.network "private_network", ip: "#{instance[:ip]}"
-      # i.vm.provision "ansible" do |ansible|
-      #   ansible.groups = {
-      #     "manager" => manager_nodes,
-      #     "worker" => worker_nodes
-      #   }
-      #   ansible.playbook = "playbooks/main.yml"
-      #   ansible.limit = 'all'
-      #   ansible.extra_vars = { 
-      #     "swarm_iface" => "enp0s8", 
-      #   }
-      # end
-    end
+  # Create Node 2 as a Swarm Manager (Reachable)
+  config.vm.define "node2" do |config|
+    config.vm.hostname = "node2"
+    config.vm.network "private_network", ip: "10.0.7.12"
   end
 
+  # Create Node 3 as a Swarm Worker
+  # -- Uncomment to add a worker --
+  # config.vm.define "node3" do |config|
+  #   config.vm.hostname = "node3"
+  #   config.vm.network "private_network", ip: "10.0.7.13"
+  # end
 end

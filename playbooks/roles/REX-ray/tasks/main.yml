@@ -25,4 +25,3 @@
     state: started
   when: rexray_service
 
-- include: reboot.yml
