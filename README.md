@@ -41,16 +41,9 @@ Default: ansible_python_interpreter: "/usr/local/bin/python"
 When the Vagrant environment is up and running, you can run `vagrant ssh node1` to get into the VM.  Docker volumes should now be functioning using REX-Ray to create and remove volumes as needed. By default Volumes will be created in a directory called `Volumes` in the root directory of the repo.  
 
 ## Options
-By default there are 3 nodes (2 managers and 1 worker) configured in the Vagrant file. To modify the number of worker nodes modify the section required and categorize the node into the proper ansible group.
+By default there are 2 nodes (2 managers) configured in the Vagrant file. To add a worker node modify the sections commented out in the vagrantfile.
 
-```ruby
-  config.vm.define "node(x)" do |config|
-    config.vm.hostname = "node(x)"
-    config.vm.network "private_network", ip: "10.0.7.(x)"
-  end
-```
-
->Note: Server reboots can sometimes cause the vagrant provisioning to time out. Run `vagrant provision` to reprovision ansible scripts.
+>Note: You might need to `vagrant provision` the solution again after vagrant up to allow the worker to properly register to the swarm.
 
 ## REX-Ray
 Consult the full REX-Ray documentation [here](http://rexray.readthedocs.org/en/stable/).

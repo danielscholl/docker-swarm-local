@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
         "node2"
       ],
       "worker" => [
-        "node3"
+        # "node3"  # <-- Uncomment to add a worker.
       ]
     }
     ansible.playbook = "playbooks/main.yml"
@@ -53,8 +53,9 @@ Vagrant.configure("2") do |config|
   end
 
   # Create Node 3 as a Swarm Worker
-  config.vm.define "node3" do |config|
-    config.vm.hostname = "node3"
-    config.vm.network "private_network", ip: "10.0.7.13"
-  end
+  # -- Uncomment to add a worker --
+  # config.vm.define "node3" do |config|
+  #   config.vm.hostname = "node3"
+  #   config.vm.network "private_network", ip: "10.0.7.13"
+  # end
 end
